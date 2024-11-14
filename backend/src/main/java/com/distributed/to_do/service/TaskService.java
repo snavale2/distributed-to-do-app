@@ -1,2 +1,54 @@
-package com.distributed.to_do.service;public class TaskService {
+package com.distributed.to_do.service;
+
+import com.distributed.to_do.model.Task;
+import com.distributed.to_do.repository.TaskRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.List;
+
+@Service
+public class TaskService {
+
+    @Autowired
+    private TaskRepository taskRepository;
+
+    @Autowired
+    private KafkaProducerService kafkaProducerService;
+
+    @Autowired
+    private WebSocketService webSocketService;
+
+
+    public Task createTask(Task task){
+        task.setLastModified(new Date());
+        Task savedTask = taskRepository.save(task);
+        kafkaProducerService.sendMessage(savedTask);
+        webSocketService.sendTaskUpdate(savedTask);
+        return savedTask;
+    }
+
+    public Task updateTask(String id, Task task){
+        Task existingTask = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        if(existingTask.getVersion() >= task.getVersion()){
+            throw new RuntimeException("Conflict detected: Task version is outdated.");
+        }
+        task.setLastModified(new Date());
+        Task updatedTask = taskRepository.save(task);
+        kafkaProducerService.sendMessage(updatedTask);
+        webSocketService.sendTaskUpdate(updatedTask);
+        return updatedTask;
+    }
+
+    public void deleteTask(String id) {
+        Task taskToDelete = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        taskRepository.delete(taskToDelete);
+        webSocketService.sendTaskUpdate(taskToDelete);
+    }
+
+    public List<Task> getAllTasks(){
+        return taskRepository.findAll();
+    }
 }
