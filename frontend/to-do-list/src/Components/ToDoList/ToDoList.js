@@ -1,7 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import Task from "../Tasks/Task.js";
+import { useContext } from "react";
+import taskContext from "../../Context/Tasks/taskContext.js";
 
 const ToDoList = () => {
+  const context = useContext(taskContext);
+  const { addTask } = context;
+  const [task, setTask] = useState({ taskName: "" });
+
+  const handleClick = (e) => {
+    e.preventDefault();
+    addTask(task.taskName);
+  };
+
+  const onChange = (e) => {
+    setTask({ ...task, [e.target.name]: e.target.value });
+  };
+
   return (
     <div>
       <div className="mb-3 mt-4 ms-4">
@@ -15,11 +30,17 @@ const ToDoList = () => {
               type="text"
               className="form-control"
               id="taskName"
+              name="taskName"
               placeholder="Enter Task Name"
+              onChange={onChange}
             />
           </div>
           <div className="col-auto">
-            <button type="submit" className="btn btn-primary mb-3">
+            <button
+              type="submit"
+              className="btn btn-primary mb-3"
+              onClick={handleClick}
+            >
               Add Task
             </button>
           </div>

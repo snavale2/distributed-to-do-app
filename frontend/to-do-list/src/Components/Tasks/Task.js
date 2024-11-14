@@ -1,10 +1,15 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import taskContext from "../../Context/Tasks/taskContext.js";
 import TaskItems from "../Tasks/TaskItems.js";
 
 const Task = () => {
   const context = useContext(taskContext);
-  const { task, setTasks } = context;
+  const { task, fetchTask } = context;
+
+  useEffect(() => {
+    fetchTask();
+  }, []);
+
   return (
     <>
       <h4>Your Tasks</h4>
