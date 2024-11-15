@@ -25,8 +25,17 @@ public class TaskService {
     public Task createTask(Task task){
         task.setLastModified(new Date());
         Task savedTask = taskRepository.save(task);
-        kafkaProducerService.sendMessage(savedTask);
-        webSocketService.sendTaskUpdate(savedTask);
+        try {
+            kafkaProducerService.sendMessage(savedTask);
+        } catch (Exception e) {
+            System.err.println("Failed to send Kafka message: " + e.getMessage());
+        }
+        
+        try {
+            webSocketService.sendTaskUpdate(savedTask);
+        } catch (Exception e) {
+            System.err.println("Failed to send WebSocket update: " + e.getMessage());
+        }
         return savedTask;
     }
 
