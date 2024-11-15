@@ -4,22 +4,45 @@ import taskContext from "../../Context/Tasks/taskContext.js";
 const TaskItems = (props) => {
   const context = useContext(taskContext);
   const { deleteTask } = context;
-  const { task } = props;
+  const { task, update } = props;
 
-  const handleClick = () => {
-    deleteTask(task.taskId);
-  };
   return (
     <div className="col-md-2">
-      <div className="card my-3">
-        <div className="card-body">
-          <div className="d-flex align-item-center">
-            <span className="card-text" style={{fontSize: "12px", fontWeight:"bold"}}>{task.taskName}</span>
-            <i className="fa-regular fa-pen-to-square mx-2"></i>
-            <i className="fa-solid fa-trash mx-2" onClick={handleClick}></i>
+      {task.status === false ? (
+        <div className="card my-3">
+          <div className="card-body">
+            <div className="d-flex align-item-center">
+              <span
+                className="card-text"
+                style={{ fontSize: "12px", fontWeight: "bold" }}
+              >
+                {task.taskName}
+              </span>
+              <i className="fa-regular fa-pen-to-square mx-2" onClick={() => {update(task)}}></i>
+              <i className="fa-solid fa-check"></i>
+              <i
+                className="fa-solid fa-trash mx-2"
+                onClick={() => {
+                  deleteTask(task.id);
+                }}
+              ></i>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="card my-3">
+          <div className="card-body">
+            <div className="d-flex align-item-center">
+              <span
+                className="card-text"
+                style={{ fontSize: "12px", fontWeight: "bold" }}
+              >
+                {task.taskName}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

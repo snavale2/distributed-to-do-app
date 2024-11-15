@@ -2,130 +2,96 @@ import { useState } from "react";
 import noteContext from "./taskContext.js";
 
 const TaskState = (props) => {
-  // const url = "http://localhost:3000/";
-  const todoTask = [
-    {
-      taskId: "123",
-      taskName: "Buy groceries",
-      status: "pending",
-      lastModified: "2024-10-16T14:00:00Z",
-      version: 3,
-      userId: "user123",
-    },
-    {
-      taskId: "456",
-      taskName: "Buy Medicines",
-      status: "Completed",
-      lastModified: "2024-11-16T14:00:00Z",
-      version: 4,
-      userId: "user456",
-    },
-    {
-      taskId: "4",
-      taskName: "Buy Medicines",
-      status: "Completed",
-      lastModified: "2024-11-16T14:00:00Z",
-      version: 4,
-      userId: "user456",
-    },
-    {
-      taskId: "46",
-      taskName: "Buy Medicines",
-      status: "Completed",
-      lastModified: "2024-11-16T14:00:00Z",
-      version: 4,
-      userId: "user456",
-    },
-    {
-      taskId: "56",
-      taskName: "Buy Medicines",
-      status: "Completed",
-      lastModified: "2024-11-16T14:00:00Z",
-      version: 4,
-      userId: "user456",
-    },
-    {
-      taskId: "6",
-      taskName: "Buy Medicines",
-      status: "Completed",
-      lastModified: "2024-11-16T14:00:00Z",
-      version: 4,
-      userId: "user456",
-    },
-  ];
+  const url = "http://localhost:8080";
 
-  const [task, setTasks] = useState(todoTask);
+  const [task, setTasks] = useState([]);
 
   //Fetch all the tasks
   const fetchTask = async () => {
-    // const response = fetch(`${url}/api/task/fetchTask`, {
-    //   method:"GET",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   }
-    // });
+    try {
+      const response = await fetch(`${url}/api/tasks`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    // const json = await response.json();
-    // setTasks(json);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tasks: ${response.statusText}`);
+      }
 
-  }
+      const json = await response.json();
+      console.log(json);
+      setTasks(json);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
 
   //Add a task
   const addTask = async (taskName) => {
-    // const response = await fetch(`${url}/api/task/addTask`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({ taskName }),
-    // });
+    const response = await fetch(`${url}/api/tasks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ taskName, status: false, version: 1 }),
+    });
 
-    // const json = response.json();
+    const json = await response.json();
 
-    const newTask = {
-      taskId: "61",
-      taskName: taskName,
-      status: "Completed",
-      lastModified: "2024-12-16T14:00:00Z",
-      version: 4,
-      userId: "user4569",
-    };
-
-    setTasks(task.concat(newTask));
+    setTasks(task.concat(json));
   };
 
   //Update a task
   const editTask = async (taskId, taskName) => {
-    // const response = await fetch(`${url}/api/task/editTask/${taskId}`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({ taskName }),
-    // });
+    const response = await fetch(`${url}/api/tasks/${taskId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ taskName }),
+    });
 
-    // const json = response.json();
+    const json = await response.json();
 
-    for(let i = 0; i < task.length(); i++)
-    {
+    for (let i = 0; i < task.length(); i++) {
       const element = task[i];
-      if(element.taskId === taskId)
-      {
+      if (element.taskId === taskId) {
         element.taskName = taskName;
       }
     }
   };
 
   //Delete a task
-  const deleteTask = (taskId) => {
-    const deleteTask = task.filter((val) => {
-      return val.taskId !== taskId;
-    });
-    setTasks(deleteTask);
+  const deleteTask = async (taskId) => {
+    try {
+      //API Call
+      const response = await fetch(`${url}/api/tasks/${taskId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Check if the response is successful (204 No Content for delete)
+      if (!response.ok) {
+        throw new Error(`Failed to delete task: ${response.statusText}`);
+      }
+
+      const deleteTask = task.filter((val) => {
+        return val.id !== taskId;
+      });
+      setTasks(deleteTask);
+    } catch (error) {
+      console.error("Error while deleting the task: - ", error);
+    }
   };
 
   return (
-    <noteContext.Provider value={{ task, addTask, deleteTask, fetchTask }}>
+    <noteContext.Provider
+      value={{ task, addTask, editTask, deleteTask, fetchTask }}
+    >
       {props.children}
     </noteContext.Provider>
   );
