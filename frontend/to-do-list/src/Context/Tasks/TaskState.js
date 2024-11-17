@@ -24,42 +24,57 @@ const TaskState = (props) => {
       console.log(json);
       setTasks(json);
     } catch (error) {
-      console.error("Error fetching tasks:", error);
+      console.error("Error while fetching tasks:", error);
     }
   };
 
   //Add a task
   const addTask = async (taskName) => {
-    const response = await fetch(`${url}/api/tasks`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ taskName, status: false, version: 1 }),
-    });
+    try {
+      const response = await fetch(`${url}/api/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ taskName, status: false, version: 1 }),
+      });
 
-    const json = await response.json();
+      if (!response.ok) {
+        throw new Error(`Failed to add tasks: ${response.statusText}`);
+      }
 
-    setTasks(task.concat(json));
+      const json = await response.json();
+      setTasks(task.concat(json));
+    } catch (error) {
+      console.error("Error while adding tasks:", error);
+    }
   };
 
   //Update a task
   const editTask = async (taskId, taskName) => {
-    const response = await fetch(`${url}/api/tasks/${taskId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ taskName }),
-    });
+    try {
+      const response = await fetch(`${url}/api/tasks/${taskId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ taskName }),
+      });
 
-    const json = await response.json();
-
-    for (let i = 0; i < task.length(); i++) {
-      const element = task[i];
-      if (element.taskId === taskId) {
-        element.taskName = taskName;
+      if (!response.ok) {
+        throw new Error(`Failed to edit tasks: ${response.statusText}`);
       }
+
+      const json = await response.json();
+
+      for (let i = 0; i < task.length(); i++) {
+        const element = task[i];
+        if (element.taskId === taskId) {
+          element.taskName = taskName;
+        }
+      }
+    } catch (error) {
+      console.error("Error while editing tasks:", error);
     }
   };
 
@@ -88,9 +103,37 @@ const TaskState = (props) => {
     }
   };
 
+  //Mark task as complete
+  const completeTask = async (taskId, status) => {
+    try {
+      const response = await fetch(`${url}/api/tasks/${taskId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status : true }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to update the status of the task, ${response.statusText}`
+        );
+      }
+
+      const json = await response.json();
+
+      for (let i = 0; i < task.length(); i++) {
+        const element = task[i];
+        if (element.taskId === taskId) element.status = status;
+      }
+    } catch (error) {
+      console.error("Error while updating the status of the task:- ", error);
+    }
+  };
+
   return (
     <noteContext.Provider
-      value={{ task, addTask, editTask, deleteTask, fetchTask }}
+      value={{ task, addTask, editTask, deleteTask, fetchTask, completeTask }}
     >
       {props.children}
     </noteContext.Provider>

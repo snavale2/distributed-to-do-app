@@ -1,19 +1,38 @@
-import React, { useContext, useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { Modal } from "bootstrap";
 import taskContext from "../../Context/Tasks/taskContext.js";
 import TaskItems from "../Tasks/TaskItems.js";
 
 const Task = () => {
   const context = useContext(taskContext);
-  const { task, fetchTask } = context;
+  const { task, fetchTask, editTask } = context;
 
   useEffect(() => {
     fetchTask();
+    //eslint-disable-next-line
   }, []);
+
+  const [eTask, setTask] = useState({id: "", etaskName: "" });
 
   const ref = useRef(null);
 
-  const updateTask = (task) => {
-    ref.current.click();
+  const refClose = useRef(null);
+
+  const updateTask = (currentTask) => {
+    ref.current = new Modal(document.getElementById("exampleModal"));
+    ref.current.show();
+    setTask({id: currentTask.id, etaskName: currentTask.taskName});
+  };
+
+  const handleClick = (e) => {
+    console.log(eTask);
+    refClose.current = new Modal(document.getElementById("exampleModal"));
+    editTask(eTask.id, eTask.etaskName);
+    ref.current.hide();
+  };
+
+  const onChange = (e) => {
+    setTask({ ...eTask, [e.target.name]: e.target.value });
   };
 
   return (
@@ -22,8 +41,7 @@ const Task = () => {
         type="button"
         ref={ref}
         className="btn btn-primary"
-        data-toggle="modal"
-        data-target="#exampleModal"
+        style={{ display: "none" }}
       >
         Launch modal
       </button>
@@ -41,26 +59,35 @@ const Task = () => {
               <h5 className="modal-title" id="exampleModalLabel">
                 Update Task
               </h5>
-              <button
-                type="button"
-                className="close"
-                data-dismiss="modal"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
             </div>
-            <div className="modal-body">...</div>
+            <div className="modal-body">
+              <form className="row g-3 my-2">
+                <div className="col-auto">
+                  <label htmlFor="taskName">Task Name</label>
+                </div>
+                <div className="col-auto">
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="etaskName"
+                    name="etaskName"
+                    placeholder="Enter Task Name"
+                    value={eTask.etaskName}
+                    onChange={onChange}
+                  />
+                </div>
+              </form>
+            </div>
             <div className="modal-footer">
               <button
                 type="button"
                 className="btn btn-secondary"
-                data-dismiss="modal"
+                onClick={() => ref.current.hide()}
               >
                 Close
               </button>
-              <button type="button" className="btn btn-primary">
-                Save changes
+              <button ref={refClose} type="button" className="btn btn-primary" onClick={handleClick}>
+                Update Task
               </button>
             </div>
           </div>

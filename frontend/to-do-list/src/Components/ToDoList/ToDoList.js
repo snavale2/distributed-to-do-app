@@ -11,6 +11,7 @@ const ToDoList = () => {
   const handleClick = (e) => {
     e.preventDefault();
     addTask(task.taskName);
+    document.getElementById("taskName").value = "";
   };
 
   const onChange = (e) => {

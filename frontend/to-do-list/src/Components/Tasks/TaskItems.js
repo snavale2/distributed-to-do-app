@@ -3,7 +3,7 @@ import taskContext from "../../Context/Tasks/taskContext.js";
 
 const TaskItems = (props) => {
   const context = useContext(taskContext);
-  const { deleteTask } = context;
+  const { deleteTask, completeTask } = context;
   const { task, update } = props;
 
   return (
@@ -19,7 +19,9 @@ const TaskItems = (props) => {
                 {task.taskName}
               </span>
               <i className="fa-regular fa-pen-to-square mx-2" onClick={() => {update(task)}}></i>
-              <i className="fa-solid fa-check"></i>
+              <i className="fa-solid fa-check" onClick={() => {
+                completeTask(task.id, task.status);
+              }}></i>
               <i
                 className="fa-solid fa-trash mx-2"
                 onClick={() => {
