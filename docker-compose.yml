@@ -8,12 +8,6 @@ services:
     volumes:
       - mongo-data:/data/db
 
-  redis:
-    image: redis:alpine
-    container_name: redis_db
-    ports:
-      - "6379:6379"
-
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
     container_name: zookeeper
@@ -44,11 +38,9 @@ services:
       - "8080:8080"
     depends_on:
       - mongodb
-      - redis
       - kafka
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongo_db:27017/todo-db
-      SPRING_REDIS_HOST: redis_db
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
 volumes:

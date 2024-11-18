@@ -41,9 +41,8 @@ public class TaskService {
 
     public Task updateTask(String id, Task task){
         Task existingTask = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
-        if(existingTask.getVersion() >= task.getVersion()){
-            throw new RuntimeException("Conflict detected: Task version is outdated.");
-        }
+
+        task.setId(existingTask.getId());
         task.setLastModified(new Date());
         Task updatedTask = taskRepository.save(task);
         kafkaProducerService.sendMessage(updatedTask);
