@@ -21,7 +21,6 @@ const TaskState = (props) => {
       }
 
       const json = await response.json();
-      console.log(json);
       setTasks(json);
     } catch (error) {
       console.error("Error while fetching tasks:", error);
@@ -58,7 +57,7 @@ const TaskState = (props) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ taskName }),
+        body: JSON.stringify({ taskName, status : false, version: 1 }),
       });
 
       if (!response.ok) {
@@ -66,13 +65,18 @@ const TaskState = (props) => {
       }
 
       const json = await response.json();
+      console.log("Edited Task", task);
+      let editTasks = JSON.parse(JSON.stringify(task));
 
-      for (let i = 0; i < task.length(); i++) {
-        const element = task[i];
-        if (element.taskId === taskId) {
-          element.taskName = taskName;
+      for (let i = 0; i < editTasks.length; i++) {
+        const element = editTasks[i];
+        if (element.id === taskId) {
+          editTasks[i].taskName = taskName;
+          break;
         }
       }
+      setTasks(editTasks);
+
     } catch (error) {
       console.error("Error while editing tasks:", error);
     }
@@ -104,14 +108,14 @@ const TaskState = (props) => {
   };
 
   //Mark task as complete
-  const completeTask = async (taskId, status) => {
+  const completeTask = async (taskId, taskName, version) => {
     try {
       const response = await fetch(`${url}/api/tasks/${taskId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status : true }),
+        body: JSON.stringify({ status : true, taskName : taskName, version : version }),
       });
 
       if (!response.ok) {
@@ -121,11 +125,20 @@ const TaskState = (props) => {
       }
 
       const json = await response.json();
+      
+      let completedTask = JSON.parse(JSON.stringify(task));
 
-      for (let i = 0; i < task.length(); i++) {
-        const element = task[i];
-        if (element.taskId === taskId) element.status = status;
+      for (let i = 0; i < completedTask.length; i++) {
+        const element = completedTask[i];
+        if (element.id === taskId) 
+        {
+          completedTask[i].status = true;
+          break;
+        }
       }
+      console.log(completedTask);
+      setTasks(completedTask);
+
     } catch (error) {
       console.error("Error while updating the status of the task:- ", error);
     }
