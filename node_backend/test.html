@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <!-- Include Socket.IO Client Library -->
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>WebSocket Testing</h1>
+    <p>Open the browser console to see WebSocket events.</p>
+    <script>
+        // Connect to the WebSocket server
+        const socket = io('http://localhost:8080');
+
+        // Log when connected
+        socket.on('connect', () => {
+            console.log('Connected to the WebSocket server');
+
+            // Listen for task updates
+            socket.on('task-updated', (data) => {
+                console.log('Task Updated:', data);
+            });
+        });
+
+        // Log when disconnected
+        socket.on('disconnect', () => {
+            console.log('Disconnected from the WebSocket server');
+        });
+    </script>
+</body>
+</html>

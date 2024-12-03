@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { io } from "socket.io-client";
 import noteContext from "./taskContext.js";
 
 const TaskState = (props) => {
   const url = "http://localhost:8080";
-
+  const socket = io(url);
   const [task, setTasks] = useState([]);
 
   //Fetch all the tasks
@@ -52,6 +53,7 @@ const TaskState = (props) => {
   //Update a task
   const editTask = async (taskId, taskName) => {
     try {
+      // console.log(taskId);
       const response = await fetch(`${url}/api/tasks/${taskId}`, {
         method: "PUT",
         headers: {
@@ -143,6 +145,39 @@ const TaskState = (props) => {
       console.error("Error while updating the status of the task:- ", error);
     }
   };
+
+  // WebSocket setup
+  useEffect(() => {
+    fetchTask();
+
+    // Listen for task updates
+    socket.on("task-updated", (data) => {
+      switch (data.type) {
+        case "ADD":
+          setTasks((prevTasks) => [...prevTasks, data.task]);
+          break;
+        case "UPDATE":
+          setTasks((prevTasks) =>
+            prevTasks.map((task) =>
+              task._id === data.task._id ? data.task : task
+            )
+          );
+          break;
+        case "DELETE":
+          setTasks((prevTasks) =>
+            prevTasks.filter((task) => task._id !== data.id)
+          );
+          break;
+        default:
+          console.warn("Unhandled event type:", data.type);
+      }
+    });
+
+    // Cleanup WebSocket connection on component unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   return (
     <noteContext.Provider

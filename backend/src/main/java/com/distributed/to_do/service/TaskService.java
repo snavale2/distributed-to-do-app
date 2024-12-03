@@ -39,16 +39,39 @@ public class TaskService {
         return savedTask;
     }
 
-    public Task updateTask(String id, Task task){
-        Task existingTask = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+//    public Task updateTask(String id, Task task){
+//        Task existingTask = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+//
+//        task.setId(existingTask.getId());
+//        task.setLastModified(new Date());
+//        Task updatedTask = taskRepository.save(task);
+//        kafkaProducerService.sendMessage(updatedTask);
+//        webSocketService.sendTaskUpdate(updatedTask);
+//        return updatedTask;
+//    }
+
+    public Task updateTask(String id, Task task) {
+        Task existingTask = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
 
         task.setId(existingTask.getId());
         task.setLastModified(new Date());
         Task updatedTask = taskRepository.save(task);
-        kafkaProducerService.sendMessage(updatedTask);
-        webSocketService.sendTaskUpdate(updatedTask);
+
+        try {
+            kafkaProducerService.sendMessage(updatedTask);
+        } catch (Exception e) {
+            System.out.println(" @@@@@@@@@@@@@@@@@@@@@ Failed to send Kafka message: " + e.getMessage());
+        }
+
+        try {
+            webSocketService.sendTaskUpdate(updatedTask);
+        } catch (Exception e) {
+            System.out.println("@@@@@@@@@@@@@@@@@@@@ Failed to send WebSocket update: " + e.getMessage());
+        }
         return updatedTask;
     }
+
 
     public void deleteTask(String id) {
         Task taskToDelete = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
