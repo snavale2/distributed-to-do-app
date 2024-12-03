@@ -21,7 +21,7 @@ const Task = () => {
   const updateTask = (currentTask) => {
     ref.current = new Modal(document.getElementById("exampleModal"));
     ref.current.show();
-    setTask({id: currentTask.id, etaskName: currentTask.taskName});
+    setTask({id: currentTask._id, etaskName: currentTask.taskName});
   };
 
   const handleClick = (e) => {
@@ -101,7 +101,7 @@ const Task = () => {
           task
             .filter((val) => val.status === false)
             .map((val) => (
-              <TaskItems key={val.id} task={val} update={updateTask} />
+              <TaskItems key={val._id} task={val} update={updateTask} />
             ))
         )}
       </div>

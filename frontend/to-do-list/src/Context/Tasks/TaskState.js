@@ -1,11 +1,48 @@
 import { useState, useEffect } from "react";
-import { io } from "socket.io-client";
+import io from 'socket.io-client';
 import noteContext from "./taskContext.js";
 
 const TaskState = (props) => {
   const url = "http://localhost:8080";
-  const socket = io(url);
   const [task, setTasks] = useState([]);
+  const [socket, setSocket] = useState(null);
+
+  // Establish WebSocket connection
+  useEffect(() => {
+    // Create socket connection
+    const newSocket = io(url);
+    setSocket(newSocket);
+
+    // Listen for task updates via WebSocket
+    newSocket.on('task-updated', (data) => {
+      switch (data.type) {
+        case 'ADD':
+          setTasks(prevTasks => {
+            // Prevent duplicate tasks
+            const isDuplicate = prevTasks.some(t => t._id === data.task._id);
+            return isDuplicate ? prevTasks : [...prevTasks, data.task];
+          });
+          break;
+        case 'UPDATE':
+          setTasks(prevTasks => 
+            prevTasks.map(t => 
+              t._id === data.task._id ? data.task : t
+            )
+          );
+          break;
+        case 'DELETE':
+          setTasks(prevTasks => 
+            prevTasks.filter(t => t._id !== data.id)
+          );
+          break;
+      }
+    });
+
+    // Cleanup socket connection on unmount
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
 
   //Fetch all the tasks
   const fetchTask = async () => {
@@ -36,7 +73,11 @@ const TaskState = (props) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ taskName, status: false, version: 1 }),
+        body: JSON.stringify({ 
+          taskName, 
+          status: false, 
+          version: 1 
+        }),
       });
 
       if (!response.ok) {
@@ -44,7 +85,8 @@ const TaskState = (props) => {
       }
 
       const json = await response.json();
-      setTasks(task.concat(json));
+      // We don't need to manually update state here 
+      // as the WebSocket listener will handle it
     } catch (error) {
       console.error("Error while adding tasks:", error);
     }
@@ -53,32 +95,24 @@ const TaskState = (props) => {
   //Update a task
   const editTask = async (taskId, taskName) => {
     try {
-      // console.log(taskId);
       const response = await fetch(`${url}/api/tasks/${taskId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ taskName, status : false, version: 1 }),
+        body: JSON.stringify({ 
+          taskName, 
+          status: false, 
+          version: 1 
+        }),
       });
 
       if (!response.ok) {
         throw new Error(`Failed to edit tasks: ${response.statusText}`);
       }
 
-      const json = await response.json();
-      console.log("Edited Task", task);
-      let editTasks = JSON.parse(JSON.stringify(task));
-
-      for (let i = 0; i < editTasks.length; i++) {
-        const element = editTasks[i];
-        if (element.id === taskId) {
-          editTasks[i].taskName = taskName;
-          break;
-        }
-      }
-      setTasks(editTasks);
-
+      // We don't need to manually update state 
+      // as the WebSocket listener will handle it
     } catch (error) {
       console.error("Error while editing tasks:", error);
     }
@@ -87,7 +121,6 @@ const TaskState = (props) => {
   //Delete a task
   const deleteTask = async (taskId) => {
     try {
-      //API Call
       const response = await fetch(`${url}/api/tasks/${taskId}`, {
         method: "DELETE",
         headers: {
@@ -100,10 +133,8 @@ const TaskState = (props) => {
         throw new Error(`Failed to delete task: ${response.statusText}`);
       }
 
-      const deleteTask = task.filter((val) => {
-        return val.id !== taskId;
-      });
-      setTasks(deleteTask);
+      // We don't need to manually update state 
+      // as the WebSocket listener will handle it
     } catch (error) {
       console.error("Error while deleting the task: - ", error);
     }
@@ -117,7 +148,11 @@ const TaskState = (props) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status : true, taskName : taskName, version : version }),
+        body: JSON.stringify({ 
+          status: true, 
+          taskName: taskName, 
+          version: version + 1 
+        }),
       });
 
       if (!response.ok) {
@@ -126,58 +161,12 @@ const TaskState = (props) => {
         );
       }
 
-      const json = await response.json();
-      
-      let completedTask = JSON.parse(JSON.stringify(task));
-
-      for (let i = 0; i < completedTask.length; i++) {
-        const element = completedTask[i];
-        if (element.id === taskId) 
-        {
-          completedTask[i].status = true;
-          break;
-        }
-      }
-      console.log(completedTask);
-      setTasks(completedTask);
-
+      // We don't need to manually update state 
+      // as the WebSocket listener will handle it
     } catch (error) {
       console.error("Error while updating the status of the task:- ", error);
     }
   };
-
-  // WebSocket setup
-  useEffect(() => {
-    fetchTask();
-
-    // Listen for task updates
-    socket.on("task-updated", (data) => {
-      switch (data.type) {
-        case "ADD":
-          setTasks((prevTasks) => [...prevTasks, data.task]);
-          break;
-        case "UPDATE":
-          setTasks((prevTasks) =>
-            prevTasks.map((task) =>
-              task._id === data.task._id ? data.task : task
-            )
-          );
-          break;
-        case "DELETE":
-          setTasks((prevTasks) =>
-            prevTasks.filter((task) => task._id !== data.id)
-          );
-          break;
-        default:
-          console.warn("Unhandled event type:", data.type);
-      }
-    });
-
-    // Cleanup WebSocket connection on component unmount
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
 
   return (
     <noteContext.Provider

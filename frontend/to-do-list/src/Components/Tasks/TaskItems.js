@@ -20,12 +20,12 @@ const TaskItems = (props) => {
               </span>
               <i className="fa-regular fa-pen-to-square mx-2" onClick={() => {update(task)}}></i>
               <i className="fa-solid fa-check" onClick={() => {
-                completeTask(task.id, task.taskName, task.version);
+                completeTask(task._id, task.taskName, task.version);
               }}></i>
               <i
                 className="fa-solid fa-trash mx-2"
                 onClick={() => {
-                  deleteTask(task.id);
+                  deleteTask(task._id);
                 }}
               ></i>
             </div>
